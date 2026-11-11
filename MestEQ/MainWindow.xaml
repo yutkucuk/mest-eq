@@ -8,7 +8,7 @@
         FontFamily="{StaticResource Body}" FontSize="13"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
     <Window.Resources>
-        <local:NumberConverter x:Key="Num" />
+        <local:NumberConverter x:Key="NumConv" />
     </Window.Resources>
 
     <Grid Margin="18,14,18,14">
@@ -290,9 +290,9 @@
                                         <CheckBox IsChecked="{Binding Enabled}" VerticalAlignment="Center" ToolTip="Filtreyi aç/kapat" Cursor="Hand" />
                                         <Button Grid.Column="1" Content="{Binding KindLabel}" Style="{StaticResource Btn}" Padding="4,4" FontSize="12"
                                                 Tag="{Binding}" Click="CycleKind_Click" ToolTip="Tıkla: tepe, alçak raf, yüksek raf" />
-                                        <TextBox Grid.Column="2" Margin="4,0,0,0" Text="{Binding Freq, Converter={StaticResource Num}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
-                                        <TextBox Grid.Column="3" Margin="4,0,0,0" Text="{Binding Gain, Converter={StaticResource Num}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
-                                        <TextBox Grid.Column="4" Margin="4,0,0,0" Text="{Binding Q, Converter={StaticResource Num}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
+                                        <TextBox Grid.Column="2" Margin="4,0,0,0" Text="{Binding Freq, Converter={StaticResource NumConv}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
+                                        <TextBox Grid.Column="3" Margin="4,0,0,0" Text="{Binding Gain, Converter={StaticResource NumConv}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
+                                        <TextBox Grid.Column="4" Margin="4,0,0,0" Text="{Binding Q, Converter={StaticResource NumConv}, UpdateSourceTrigger=LostFocus}" KeyDown="NumBox_KeyDown" />
                                         <Button Grid.Column="5" Content="✕" Style="{StaticResource IconBtn}" Tag="{Binding}" Click="RemoveFilter_Click" ToolTip="Filtreyi sil" />
                                     </Grid>
                                 </DataTemplate>
