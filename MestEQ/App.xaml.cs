@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using WinForms = System.Windows.Forms;
 
@@ -8,33 +10,95 @@ namespace MestEQ
 {
     public partial class App : Application
     {
+        private const string MutexName = "MestEQ.SingleInstance.v1";
+        private const string ShowEventName = "MestEQ.ShowWindow.v1";
+
         private Mutex? _mutex;
+        private EventWaitHandle? _showSignal;
         private WinForms.NotifyIcon? _tray;
         private WinForms.ToolStripMenuItem? _trayEqItem;
         private MainWindow? _main;
 
         public bool ExitRequested { get; private set; }
 
+        public static string LogPath =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MestEQ", "hata.log");
+
         protected override void OnStartup(StartupEventArgs e)
         {
-            _mutex = new Mutex(true, "MestEQ.SingleInstance.v1", out bool created);
+            bool startHidden = e.Args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));
+
+            _mutex = new Mutex(true, MutexName, out bool created);
             if (!created)
             {
-                // Zaten çalışıyor: ikinci örneği sessizce kapat.
+                // Mest zaten çalışıyor: penceresini öne getirmesini söyle ve kapan.
+                if (!startHidden)
+                {
+                    try
+                    {
+                        using var ev = EventWaitHandle.OpenExisting(ShowEventName);
+                        ev.Set();
+                    }
+                    catch { }
+                }
                 Shutdown();
                 return;
             }
 
+            DispatcherUnhandledException += (_, ev) =>
+            {
+                LogCrash(ev.Exception);
+                ev.Handled = true;
+                MessageBox.Show("Mest'te beklenmeyen bir hata oluştu:\n\n" + ev.Exception.Message +
+                                "\n\nAyrıntılar şu dosyaya yazıldı:\n" + LogPath,
+                                "Mest EQ", MessageBoxButton.OK, MessageBoxImage.Error);
+            };
+            AppDomain.CurrentDomain.UnhandledException += (_, ev) => LogCrash(ev.ExceptionObject as Exception);
+            TaskScheduler.UnobservedTaskException += (_, ev) => { LogCrash(ev.Exception); ev.SetObserved(); };
+
             base.OnStartup(e);
-            bool startHidden = e.Args.Any(a => a.Equals("--tray", StringComparison.OrdinalIgnoreCase));
 
-            _main = new MainWindow();
-            MainWindow = _main;
-            CreateTray();
-            _main.Initialize();
-            _main.BypassChanged += bypass => { if (_trayEqItem != null) _trayEqItem.Checked = !bypass; };
+            _showSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+            var signal = _showSignal;
+            var listener = new Thread(() =>
+            {
+                while (true)
+                {
+                    try { signal.WaitOne(); }
+                    catch { return; }
+                    Dispatcher.BeginInvoke(new Action(ShowMain));
+                }
+            }) { IsBackground = true, Name = "MestShowListener" };
+            listener.Start();
 
-            if (!startHidden) _main.Show();
+            try
+            {
+                _main = new MainWindow();
+                MainWindow = _main;
+                CreateTray();
+                _main.Initialize();
+                _main.BypassChanged += bypass => { if (_trayEqItem != null) _trayEqItem.Checked = !bypass; };
+                if (!startHidden) ShowMain();
+            }
+            catch (Exception ex)
+            {
+                LogCrash(ex);
+                MessageBox.Show("Mest başlatılamadı:\n\n" + ex.Message +
+                                "\n\nAyrıntılar şu dosyaya yazıldı:\n" + LogPath,
+                                "Mest EQ", MessageBoxButton.OK, MessageBoxImage.Error);
+                ExitApp();
+            }
+        }
+
+        public static void LogCrash(Exception? ex)
+        {
+            if (ex == null) return;
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
+                File.AppendAllText(LogPath, $"==== {DateTime.Now:yyyy-MM-dd HH:mm:ss} ====\r\n{ex}\r\n\r\n");
+            }
+            catch { }
         }
 
         private void CreateTray()
@@ -45,7 +109,7 @@ namespace MestEQ
             var menu = new WinForms.ContextMenuStrip();
             menu.Items.Add("Mest'i aç", null, (_, _) => ShowMain());
             _trayEqItem = new WinForms.ToolStripMenuItem("EQ açık") { Checked = true, CheckOnClick = true };
-            _trayEqItem.Click += (_, _) => _main?.SetBypass(!_trayEqItem.Checked);
+            _trayEqItem.Click += (_, _) => _main?.SetBypass(!(_trayEqItem?.Checked ?? true));
             menu.Items.Add(_trayEqItem);
             menu.Items.Add(new WinForms.ToolStripSeparator());
             menu.Items.Add("Çıkış", null, (_, _) => ExitApp());
@@ -66,6 +130,9 @@ namespace MestEQ
             _main.Show();
             if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
             _main.Activate();
+            _main.Topmost = true;
+            _main.Topmost = false;
+            _main.Focus();
         }
 
         public void Notify(string title, string text)
@@ -76,14 +143,15 @@ namespace MestEQ
         public void ExitApp()
         {
             ExitRequested = true;
-            _main?.Shutdown();
-            if (_tray != null) { _tray.Visible = false; _tray.Dispose(); }
+            try { _main?.Shutdown(); } catch { }
+            if (_tray != null) { _tray.Visible = false; _tray.Dispose(); _tray = null; }
             Shutdown();
         }
 
         protected override void OnExit(ExitEventArgs e)
         {
             if (_tray != null) { _tray.Visible = false; _tray.Dispose(); }
+            _showSignal?.Dispose();
             _mutex?.Dispose();
             base.OnExit(e);
         }
