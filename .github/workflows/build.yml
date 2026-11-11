@@ -1,0 +1,52 @@
+name: Mest EQ kurulum dosyasını derle
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Kodu al
+        uses: actions/checkout@v4
+
+      - name: .NET 8 kur
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Uygulamayı tek exe olarak derle
+        run: >
+          dotnet publish MestEQ/MestEQ.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -o publish
+
+      - name: Equalizer APO ve GPL lisans metnini indir
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force deps | Out-Null
+          $exe = "deps/EqualizerAPO-x64-1.4.2.exe"
+          curl.exe -L --retry 5 --retry-delay 5 -A "Mozilla/5.0" -o $exe "https://sourceforge.net/projects/equalizerapo/files/1.4.2/EqualizerAPO-x64-1.4.2.exe/download"
+          $size = (Get-Item $exe).Length
+          Write-Host "Equalizer APO boyutu: $size bayt"
+          if ($size -lt 5MB) { throw "Equalizer APO indirilemedi, iş akışını yeniden çalıştır." }
+          curl.exe -L --retry 5 -o licenses/GPL-2.0.txt "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt"
+
+      - name: Kurulum dosyasını oluştur (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+          & $iscc installer/MestEQ.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup derlemesi başarısız" }
+
+      - name: Kurulum dosyasını yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: MestEQ-Setup
+          path: installer/Output/MestEQ-Setup.exe
+          if-no-files-found: error
