@@ -1,0 +1,4 @@
+Mest EQ, Equalizer APO (GPL-2.0, https://sourceforge.net/projects/equalizerapo/) ile birlikte dağıtılır.
+Equalizer APO değiştirilmeden, resmi kurulum dosyasıyla kurulur. Kaynak kodu yukarıdaki adreste bulunur.
+
+Mest EQ ayrıca NAudio (MIT Lisansı, https://github.com/naudio/NAudio) kullanır.

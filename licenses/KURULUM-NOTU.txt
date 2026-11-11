@@ -1,0 +1,22 @@
+﻿MEST EQ KURULUM NOTU
+
+Mest EQ, sesi işlemek için açık kaynaklı Equalizer APO ses motorunu kullanır.
+Bu kurulum Equalizer APO 1.4.2'yi senin yerine sessizce kurar ve Mest'e bağlar.
+
+Equalizer APO
+  Geliştirici: Jonas Thedering
+  Lisans: GNU General Public License, sürüm 2 (GPL-2.0)
+  Kaynak kodu: https://sourceforge.net/projects/equalizerapo/
+  Lisans metni: licenses\GPL-2.0.txt (kurulum klasöründe)
+
+Kurulum ne yapar?
+  1. Mest EQ'yu Program Files altına kurar.
+  2. Equalizer APO yüklü değilse onu kurar.
+  3. Equalizer APO'nun config klasörüne Windows kullanıcıları için yazma izni verir,
+     böylece Mest yönetici izni istemeden ayar yazabilir.
+  4. Mevcut config.txt'yi config.mest-yedek.txt olarak yedekler ve Mest'e bağlar.
+  5. Cihaz seçiciyi açar: burada Moondrop Dawn Pro'yu bir kez işaretlemen gerekir.
+
+Kaldırırken:
+  Mest kaldırılınca config.txt yedekten geri yüklenir. Equalizer APO sistemde kalır;
+  istersen Windows "Uygulamalar" bölümünden ayrıca kaldırabilirsin.
