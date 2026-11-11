@@ -2,20 +2,6 @@
 
 Kiwi Ears Altruva ve Moondrop Dawn Pro için yazılmış, katmanlı bir Windows ekolayzırı. Sesi arka planda Equalizer APO işler; sen sadece Mest'i görürsün.
 
-## Kurulum dosyasını (exe) almak
-
-Kurulum dosyası GitHub'ın Windows sunucularında otomatik derlenir. Bilgisayarına hiçbir geliştirici aracı kurman gerekmez.
-
-1. github.com'da ücretsiz bir hesap aç ve yeni, boş bir depo (repository) oluştur. Adı örneğin `mest-eq` olabilir; gizli (private) seçebilirsin.
-2. Depo sayfasında "uploading an existing file" bağlantısına tıkla ve bu zip'in içindeki tüm dosya ve klasörleri sürükleyip bırak. `.github` klasörünün de yüklendiğinden emin ol (gizli klasör olduğu için bazı sistemlerde görünmeyebilir; görünmüyorsa aşağıdaki nota bak).
-3. "Commit changes" ile kaydet. Derleme kendiliğinden başlar.
-4. Üstteki "Actions" sekmesine geç. Yaklaşık 5 dakika sonra yeşil tik görünür.
-5. Derlemeye tıkla, sayfanın altındaki "Artifacts" bölümünden `MestEQ-Setup` dosyasını indir. İçinden `MestEQ-Setup.exe` çıkar.
-
-Not: Tarayıcıdan yüklerken `.github` klasörü atlanırsa, depoda "Add file > Create new file" deyip dosya adına `.github/workflows/build.yml` yaz ve zip'teki aynı dosyanın içeriğini yapıştır.
-
-Derleme kırmızı çarpıyla biterse hata kaydını bana gönder; düzeltip sana güncel dosyayı veririm.
-
 ## İlk açılış
 
 Kurulum sırasında Equalizer APO'nun cihaz seçicisi bir kez açılır. Listede Dawn Pro'yu işaretleyip onayla. Kurulum bitince EQ etkisini duymazsan bilgisayarı bir kez yeniden başlat.
