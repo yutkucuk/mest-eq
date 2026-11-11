@@ -1,0 +1,2 @@
+# mest-eq
+kişisel eq
